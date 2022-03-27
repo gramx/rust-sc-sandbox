@@ -1,4 +1,19 @@
-use crate::{ error::ContractError, msg::{ExecuteMsg, InstantiateMsg, QueryMsg}, state::TRANSACTIONS, state::TOTAL,};
+use crate::{
+    error::ContractError,
+    msg::{ExecuteMsg, InstantiateMsg, QueryMsg}, 
+    state::TRANSACTIONS,
+    state::TOTAL,
+    //state::Transaction,
+};
+
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+pub struct Transaction {
+    pub amount: Uint128,
+    pub sender: String,
+}
 
 #[cfg(not(feature = "library"))]
 
@@ -20,10 +35,21 @@ pub fn execute(_deps: DepsMut, _env: Env, _info: MessageInfo, _msg: ExecuteMsg) 
 
 fn add(_deps: DepsMut, _info: MessageInfo, amount: Uint128) -> Result<Response, ContractError> {
     let sender = _info.sender.to_string();
-    //TODO: No test and check for duplicates yet
-    TRANSACTIONS.save(_deps.storage, &sender, &amount)?;
+
+
+    ////TODO: Old method, could be replaced
     let running_total = TOTAL.load(_deps.storage)? + &amount;
     let _total = TOTAL.save(_deps.storage, &running_total);
+
+    // update function for new or existing keys
+    let update_tnx = |d: Option<Uint128>| -> StdResult<Uint128> {
+        match d {
+            Some(one) => Ok(one + amount),
+            None => Ok(amount),
+        }
+    };
+    TRANSACTIONS.update(_deps.storage, &sender, &update_tnx)?;
+
     Ok(Response::new()
         .add_attribute("action", "add")
         .add_attribute("total", running_total.to_string())
@@ -152,6 +178,42 @@ mod tests {
         
         //First value stored is as expected
         assert_eq!(Uint128::new(10), TRANSACTIONS.load(deps.as_ref().storage, &addr1).unwrap());
+        //Second value stored is as expected
+        assert_eq!(Uint128::new(5), TRANSACTIONS.load(deps.as_ref().storage, &addr2).unwrap());
+    }
+
+    
+    #[test]
+    fn test_transactions_duplicate_senders() {
+        //Mock Data Setup
+        let addr1 = String::from("addr0001");
+        let info = mock_info(addr1.as_ref(), &[]);
+        let mut deps = mock_dependencies(&[]);
+        let msg = InstantiateMsg {};
+
+        //Start the contract
+        let _res = instantiate(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
+
+        //Setup and add the amount
+        let msg = ExecuteMsg::Add {amount: Uint128::new(10)};
+        let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+
+        //Setup and add the second amount
+        let msg = ExecuteMsg::Add {amount: Uint128::new(5)};
+        let addr2 = String::from("addr0002");
+        let info = mock_info(addr2.as_ref(), &[]);
+        let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+
+        //Setup and add the first sender (a second time)
+        let msg = ExecuteMsg::Add {amount: Uint128::new(100)};
+        let info = mock_info(addr1.as_ref(), &[]);
+        let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+
+        //Total value returned is as expected (this should be in its own test, redundant here)
+        assert_eq!(Response::new().add_attribute("action","add").add_attribute("total", "115"),_res);
+        
+        //First value stored is as expected
+        assert_eq!(Uint128::new(110), TRANSACTIONS.load(deps.as_ref().storage, &addr1).unwrap());
         //Second value stored is as expected
         assert_eq!(Uint128::new(5), TRANSACTIONS.load(deps.as_ref().storage, &addr2).unwrap());
     }
