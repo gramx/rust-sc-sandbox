@@ -117,32 +117,28 @@ mod tests {
         );
 
         assert_eq!(
-            Uint128::new(12),
-            ADDRESSES.load(
-                deps.as_ref()
-                .storage,
-                "sender"
-            ).unwrap()
+            Uint128::new(12), TOTAL.load(deps.as_ref().storage).unwrap()
         );
 
-        /*
+        let msg = ExecuteMsg::Add {
+            amount: Uint128::new(32),
+        };
+
+        let info = mock_info("sender", &[]);
+        let res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+        
         assert_eq!(
             Response::new()
                 .add_attribute("action","add")
-                .add_attribute("total", "32"),
+                .add_attribute("total", "44"),
             res
         );
-
+        
+        
         assert_eq!(
-            //Uint128::new(54),
-            Uint128::new(32),
-            ADDRESSES.load(
-                deps.as_ref()
-                .storage,
-                "sender"
-            ).unwrap()
+            Uint128::new(44), TOTAL.load(deps.as_ref().storage).unwrap()
         );
-        */
+        
     }
 
 }
