@@ -29,7 +29,7 @@ fn add(_deps: DepsMut, _info: MessageInfo, amount: Uint128) -> Result<Response, 
 
 
     ////TODO: Old method, could be replaced
-    let running_total = TOTAL.load(_deps.storage)? + &amount;
+    let running_total = TOTAL.load(_deps.storage)? + amount;
     let _total = TOTAL.save(_deps.storage, &running_total);
 
     // update function for new or existing keys
@@ -55,10 +55,12 @@ pub fn query(_deps: Deps, _env: Env, _msg: QueryMsg) -> StdResult<Binary> {
     }
 }
 
+/*
 // Using a running total might use less gas? Not sure, needs testing.
 fn running_total(_deps: Deps) -> StdResult<Uint128> {
     TOTAL.load(_deps.storage)
 }
+*/
 
 // Gets a total by adding up everything. The running total method might be better for gas?
 fn total_pool(_deps: Deps) -> StdResult<Uint128> {
@@ -72,6 +74,11 @@ fn total_pool(_deps: Deps) -> StdResult<Uint128> {
 }
 
 //TODO:
+//  ENVIRO
+//  - Fix git push not working in IDE
+//  - Fix Code . and other things not working
+//  X Downgrade node to fix SSL error (done, did not fix)
+//  
 //  EASY 
 //  - Fing out how to get unit tests that call functions directly
 //  - Find out what totalling method is cheaper, then clean code
