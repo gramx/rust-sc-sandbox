@@ -5,18 +5,9 @@ use crate::{
     state::TOTAL,
 };
 
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct Transaction {
-    pub amount: Uint128,
-    pub sender: String,
-}
-
 #[cfg(not(feature = "library"))]
 
-use cosmwasm_std::{entry_point, to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Uint128};
+use cosmwasm_std::{entry_point, to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Uint128, Order};
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn instantiate(_deps: DepsMut, _env: Env, _info: MessageInfo, _msg: InstantiateMsg) -> Result<Response, ContractError> {
@@ -28,6 +19,7 @@ pub fn instantiate(_deps: DepsMut, _env: Env, _info: MessageInfo, _msg: Instanti
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(_deps: DepsMut, _env: Env, _info: MessageInfo, _msg: ExecuteMsg) -> Result<Response, ContractError> {
     match _msg {
+        //TODO: Add min-amount to prevent spam
         ExecuteMsg::Add { amount } => add(_deps, _info, amount)
     }
 }
@@ -58,13 +50,27 @@ fn add(_deps: DepsMut, _info: MessageInfo, amount: Uint128) -> Result<Response, 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(_deps: Deps, _env: Env, _msg: QueryMsg) -> StdResult<Binary> {
     match _msg {
-        QueryMsg::Total {} => to_binary(&total(_deps)?),
+        //QueryMsg::Total {} => to_binary(&running_total(_deps)?),
+        QueryMsg::Total {} => to_binary(&total_pool(_deps)?),
     }
 }
 
-fn total(_deps: Deps) -> StdResult<Uint128> {
+// Using a running total might use less gas? Not sure, needs testing.
+fn running_total(_deps: Deps) -> StdResult<Uint128> {
     TOTAL.load(_deps.storage)
 }
+
+// Gets a total by adding up everything. The running total method might be better for gas?
+fn total_pool(_deps: Deps) -> StdResult<Uint128> {
+    let ledger: StdResult<Vec<_>> = 
+        TRANSACTIONS.range(_deps.storage, None, None, Order::Ascending).collect();
+    let mut total = Uint128::from(0u128);
+    for tnx in ledger.unwrap() {
+        total += tnx.1;
+    }
+    Ok(total)
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -216,5 +222,24 @@ mod tests {
         //Second value stored is as expected
         assert_eq!(Uint128::new(5), TRANSACTIONS.load(deps.as_ref().storage, &addr2).unwrap());
     }
+
+
+/*
+    #[test]
+    fn test_new_total_logic_temp() {
+        //Mock Data Setup
+        let addr1 = String::from("addr0001");
+        let info = mock_info(addr1.as_ref(), &[]);
+        let mut deps = mock_dependencies(&[]);
+        let msg = InstantiateMsg {};
+
+        //Start the contract
+        let _res = instantiate(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
+
+        //Setup and add the amount
+        let msg = ExecuteMsg::Add {amount: Uint128::new(10)};
+        let _res = execute(deps.as_mut(), mock_env(), info, msg).unwrap();
+
+    }*/
 
 }
