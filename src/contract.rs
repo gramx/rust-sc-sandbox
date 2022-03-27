@@ -117,6 +117,16 @@ mod tests {
         );
 
         assert_eq!(
+            Uint128::new(12),
+            ADDRESSES.load(
+                deps.as_ref()
+                .storage,
+                "sender"
+            ).unwrap()
+        );
+
+        /*
+        assert_eq!(
             Response::new()
                 .add_attribute("action","add")
                 .add_attribute("total", "32"),
@@ -124,13 +134,15 @@ mod tests {
         );
 
         assert_eq!(
-            Uint128::new(54), 
+            //Uint128::new(54),
+            Uint128::new(32),
             ADDRESSES.load(
                 deps.as_ref()
                 .storage,
                 "sender"
             ).unwrap()
         );
+        */
     }
 
 }
