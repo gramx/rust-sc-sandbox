@@ -90,6 +90,7 @@ fn total_pool(_deps: Deps) -> StdResult<Uint128> {
 //  - Figure out a true random
 //  - Add logic for contract version migration (upgrades)
 
+
 #[cfg(test)]
 mod tests {
 
