@@ -1,33 +1,18 @@
-use crate::{
-    error::ContractError,
-    msg::{ExecuteMsg, InstantiateMsg, QueryMsg},
-    state::ADDRESSES,
-    state::TOTAL,
-};
+use crate::{ error::ContractError, msg::{ExecuteMsg, InstantiateMsg, QueryMsg}, state::ADDRESSES, state::TOTAL,};
+
 #[cfg(not(feature = "library"))]
-use cosmwasm_std::entry_point;
-use cosmwasm_std::Uint128;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+
+use cosmwasm_std::{entry_point, to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Uint128};
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn instantiate(
-    _deps: DepsMut,
-    _env: Env,
-    _info: MessageInfo,
-    _msg: InstantiateMsg,
-) -> Result<Response, ContractError> {
+pub fn instantiate(_deps: DepsMut, _env: Env, _info: MessageInfo, _msg: InstantiateMsg) -> Result<Response, ContractError> {
     let total_starter = Uint128::from(0u128);
     TOTAL.save(_deps.storage, &total_starter)?;
     Ok(Response::new())
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn execute(
-    _deps: DepsMut,
-    _env: Env,
-    _info: MessageInfo,
-    _msg: ExecuteMsg,
-) -> Result<Response, ContractError> {
+pub fn execute(_deps: DepsMut, _env: Env, _info: MessageInfo, _msg: ExecuteMsg) -> Result<Response, ContractError> {
     match _msg {
         ExecuteMsg::Add { amount } => add(_deps, _info, amount)
     }
@@ -65,9 +50,7 @@ mod tests {
     fn test_add_amount_once() {
         let mut deps = mock_dependencies(&[]);
         let info = mock_info("sender", &[]);
-
         let msg = InstantiateMsg {};
-
         let _res = instantiate(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
 
         let msg = ExecuteMsg::Add {
@@ -79,17 +62,11 @@ mod tests {
         assert_eq!(
             Response::new()
                 .add_attribute("action","add")
-                .add_attribute("total", "12"),
-            res
+                .add_attribute("total", "12"),res
         );
 
         assert_eq!(
-            Uint128::new(12), 
-            ADDRESSES.load(
-                deps.as_ref()
-                .storage,
-                "sender"
-            ).unwrap()
+            Uint128::new(12), TOTAL.load(deps.as_ref().storage).unwrap()
         );
     }
 
@@ -98,9 +75,7 @@ mod tests {
     fn test_add_amount_twice() {
         let mut deps = mock_dependencies(&[]);
         let info = mock_info("sender", &[]);
-
         let msg = InstantiateMsg {};
-
         let _res = instantiate(deps.as_mut(), mock_env(), info.clone(), msg).unwrap();
 
         let msg = ExecuteMsg::Add {
@@ -112,8 +87,7 @@ mod tests {
         assert_eq!(
             Response::new()
                 .add_attribute("action","add")
-                .add_attribute("total", "12"),
-            res
+                .add_attribute("total", "12"),res
         );
 
         assert_eq!(
@@ -130,9 +104,8 @@ mod tests {
         assert_eq!(
             Response::new()
                 .add_attribute("action","add")
-                .add_attribute("total", "44"),
-            res
-        );
+                .add_attribute("total", "44"),res
+            );
         
         
         assert_eq!(
@@ -140,5 +113,8 @@ mod tests {
         );
         
     }
+
+    //Needs address tests
+    //ADDRESSES.load(deps.as_ref().storage, "sender").unwrap()
 
 }
