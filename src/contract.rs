@@ -71,6 +71,24 @@ fn total_pool(_deps: Deps) -> StdResult<Uint128> {
     Ok(total)
 }
 
+//TODO:
+//  EASY 
+//  - Fing out how to get unit tests that call functions directly
+//  - Find out what totalling method is cheaper, then clean code
+//  - Figure out how to get random (lazy mode blockHeight.Hash or something)
+//  - Add minimum buy-in to prevent spamming
+//  
+//  MED
+//  - Figure out how to get a Rust linter installed and on the pipeline
+//  - Build winning logic (split tickets between clients by their buy-in ammount)
+//  - Payout to winner 50%
+//  - Make in-term payout for charity... maye MVP the owner can specify an address?
+//
+//  HARD
+//  - Use real currency for "amount"
+//  - Link into Angle Protocol for donations
+//  - Figure out a true random
+//  - Add logic for contract version migration (upgrades)
 
 #[cfg(test)]
 mod tests {
@@ -78,8 +96,6 @@ mod tests {
     use super::*;
     use cosmwasm_std::testing::{mock_dependencies, mock_env, mock_info};
 
-
-    //TODO: Remove totals since that can be caulcated
     #[test]
     fn test_add_amount_first_person() {
         //Mock Data Setup
