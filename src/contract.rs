@@ -3,7 +3,6 @@ use crate::{
     msg::{ExecuteMsg, InstantiateMsg, QueryMsg}, 
     state::TRANSACTIONS,
     state::TOTAL,
-    //state::Transaction,
 };
 
 use schemars::JsonSchema;
